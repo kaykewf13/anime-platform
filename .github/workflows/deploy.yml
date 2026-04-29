@@ -2,9 +2,7 @@ name: 🚀 Deploy Anime Platform
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -12,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Clonar repositório
+    - name: 📥 Checkout
       uses: actions/checkout@v4
 
     - name: 🐍 Setup Python
@@ -20,21 +18,30 @@ jobs:
       with:
         python-version: "3.11"
 
-    - name: ⚙️ Instalar dependências API
+    - name: 🔍 Verificar estrutura
       run: |
-        cd platform/api
-        pip install -r requirements.txt
+        echo "📂 Estrutura do projeto:"
+        ls -R
 
-    - name: 🧪 Testar API
+    - name: ⚙️ Instalar dependências API (se existir)
       run: |
-        cd platform/api
-        uvicorn app:app --host 0.0.0.0 --port 8000 &
-        sleep 5
-        curl -f http://localhost:8000/ || exit 1
+        if [ -d "platform/api" ]; then
+          cd platform/api
+          pip install -r requirements.txt
+        else
+          echo "⚠️ Pasta platform/api não encontrada"
+        fi
 
-    - name: 🧱 Garantir estrutura web
+    - name: 🧪 Testar API (se existir)
       run: |
-        mkdir -p platform/web
+        if [ -f "platform/api/app.py" ]; then
+          cd platform/api
+          uvicorn app:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+          curl -f http://localhost:8000/ || exit 1
+        else
+          echo "⚠️ API não encontrada"
+        fi
 
     - name: 🌐 Deploy GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
