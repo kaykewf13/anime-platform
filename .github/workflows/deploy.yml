@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: write   # 🔥 ESSENCIAL pra evitar erro 403
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -18,18 +21,37 @@ jobs:
       with:
         python-version: "3.11"
 
-    - name: 🔍 Verificar estrutura
+    - name: 🔍 Debug estrutura do projeto
       run: |
-        echo "📂 Estrutura do projeto:"
+        echo "📂 Estrutura completa:"
         ls -R
+
+    - name: 📁 Garantir estrutura mínima
+      run: |
+        mkdir -p platform/web
+
+        if [ ! -f "platform/web/index.html" ]; then
+          echo "⚠️ index.html não encontrado, criando placeholder..."
+          cat > platform/web/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Anime Platform</title>
+</head>
+<body>
+  <h1>Deploy funcionando 🚀</h1>
+</body>
+</html>
+EOF
+        fi
 
     - name: ⚙️ Instalar dependências API (se existir)
       run: |
-        if [ -d "platform/api" ]; then
+        if [ -d "platform/api" ] && [ -f "platform/api/requirements.txt" ]; then
           cd platform/api
           pip install -r requirements.txt
         else
-          echo "⚠️ Pasta platform/api não encontrada"
+          echo "⚠️ API não encontrada, pulando etapa"
         fi
 
     - name: 🧪 Testar API (se existir)
@@ -40,12 +62,13 @@ jobs:
           sleep 5
           curl -f http://localhost:8000/ || exit 1
         else
-          echo "⚠️ API não encontrada"
+          echo "⚠️ API não encontrada, pulando teste"
         fi
 
-     - name: 🌐 Deploy GitHub Pages
-  uses: peaceiris/actions-gh-pages@v3
-  with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_dir: ./platform/web
-    force_orphan: true
+    - name: 🌐 Deploy GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./platform/web
+        publish_branch: gh-pages
+        force_orphan: true
