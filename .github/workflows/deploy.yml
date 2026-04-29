@@ -43,8 +43,9 @@ jobs:
           echo "⚠️ API não encontrada"
         fi
 
-    - name: 🌐 Deploy GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./platform/web
+     - name: 🌐 Deploy GitHub Pages
+  uses: peaceiris/actions-gh-pages@v3
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    publish_dir: ./platform/web
+    force_orphan: true
