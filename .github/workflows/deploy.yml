@@ -1,0 +1,43 @@
+name: 🚀 Deploy Anime Platform
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Clonar repositório
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: ⚙️ Instalar dependências API
+      run: |
+        cd platform/api
+        pip install -r requirements.txt
+
+    - name: 🧪 Testar API
+      run: |
+        cd platform/api
+        uvicorn app:app --host 0.0.0.0 --port 8000 &
+        sleep 5
+        curl -f http://localhost:8000/ || exit 1
+
+    - name: 🧱 Garantir estrutura web
+      run: |
+        mkdir -p platform/web
+
+    - name: 🌐 Deploy GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./platform/web
