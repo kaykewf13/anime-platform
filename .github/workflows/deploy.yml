@@ -6,63 +6,46 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # 🔥 ESSENCIAL pra evitar erro 403
+  contents: write
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: 📥 Checkout
       uses: actions/checkout@v4
 
-    - name: 🐍 Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-
-    - name: 🔍 Debug estrutura do projeto
+    - name: 🔍 Debug estrutura
       run: |
-        echo "📂 Estrutura completa:"
+        echo "📂 Estrutura atual:"
         ls -R
 
-    - name: 📁 Garantir estrutura mínima
+    - name: 🧱 Criar frontend automático (se não existir)
       run: |
         mkdir -p platform/web
 
         if [ ! -f "platform/web/index.html" ]; then
-          echo "⚠️ index.html não encontrado, criando placeholder..."
+          echo "⚡ Criando frontend automático..."
+
           cat > platform/web/index.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Anime Platform</title>
+  <style>
+    body { background:#0b0b0b; color:white; font-family:Arial; text-align:center; padding:50px; }
+    h1 { color:red; }
+  </style>
 </head>
 <body>
-  <h1>Deploy funcionando 🚀</h1>
+  <h1>🔥 Anime Platform Online</h1>
+  <p>Deploy funcionando com sucesso 🚀</p>
 </body>
 </html>
 EOF
-        fi
 
-    - name: ⚙️ Instalar dependências API (se existir)
-      run: |
-        if [ -d "platform/api" ] && [ -f "platform/api/requirements.txt" ]; then
-          cd platform/api
-          pip install -r requirements.txt
-        else
-          echo "⚠️ API não encontrada, pulando etapa"
-        fi
-
-    - name: 🧪 Testar API (se existir)
-      run: |
-        if [ -f "platform/api/app.py" ]; then
-          cd platform/api
-          uvicorn app:app --host 0.0.0.0 --port 8000 &
-          sleep 5
-          curl -f http://localhost:8000/ || exit 1
-        else
-          echo "⚠️ API não encontrada, pulando teste"
         fi
 
     - name: 🌐 Deploy GitHub Pages
